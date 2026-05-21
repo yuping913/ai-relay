@@ -38,7 +38,7 @@ export function transformToAnthropic(body: ChatCompletionRequest): Record<string
  * Build upstream request headers based on provider format.
  */
 export function buildHeaders(
-  headerFormat: 'openai' | 'anthropic',
+  headerFormat: 'openai' | 'anthropic' | 'azure',
   apiKey: string,
   isStream: boolean
 ): Record<string, string> {
@@ -49,6 +49,8 @@ export function buildHeaders(
   if (headerFormat === 'anthropic') {
     headers['x-api-key'] = apiKey;
     headers['anthropic-version'] = '2023-06-01';
+  } else if (headerFormat === 'azure') {
+    headers['api-key'] = apiKey;
   } else {
     headers['Authorization'] = `Bearer ${apiKey}`;
   }

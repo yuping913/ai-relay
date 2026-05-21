@@ -11,7 +11,7 @@ export interface ProviderConfig {
   displayName: string;             // Human-readable name
   baseUrl: string;                 // Default upstream base URL
   modelPrefixes: string[];         // e.g. ['gpt-', 'o1-', 'o3-']
-  headerFormat: 'openai' | 'anthropic';  // Auth header format
+  headerFormat: 'openai' | 'anthropic' | 'azure';  // Auth header format
   envKeyField: string;             // Env var name for API keys
   envBaseUrlField?: string;        // Env var name for custom base URL
 }

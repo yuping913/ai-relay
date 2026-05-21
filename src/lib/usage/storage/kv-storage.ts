@@ -11,7 +11,7 @@ import type {
 } from '../sdk';
 
 /** Known provider names for trend queries */
-const PROVIDER_NAMES = ['openai', 'anthropic', 'deepseek', 'xiaomi'];
+const PROVIDER_NAMES = ['openai', 'anthropic', 'deepseek', 'xiaomimimo', 'xiaomi'];
 
 /**
  * Get today's date string in YYYY-MM-DD format.

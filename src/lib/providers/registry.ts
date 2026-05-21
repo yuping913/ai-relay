@@ -36,9 +36,19 @@ export const PROVIDERS: Record<string, ProviderConfig> = {
     envKeyField: 'DEEPSEEK_KEYS',
     envBaseUrlField: 'DEEPSEEK_BASE_URL',
   },
+  // ⚠️ xiaomimimo 排在 xiaomi 前面，同为 mimo- 前缀时优先匹配
+  xiaomimimo: {
+    name: 'xiaomimimo',
+    displayName: 'Xiaomi MiMo (SGP)',
+    baseUrl: 'https://token-plan-sgp.xiaomimimo.com/v1',
+    modelPrefixes: ['mimo-'],
+    headerFormat: 'azure',
+    envKeyField: 'XIAOMIMIMO_KEYS',
+    envBaseUrlField: 'XIAOMIMIMO_BASE_URL',
+  },
   xiaomi: {
     name: 'xiaomi',
-    displayName: 'Xiaomi (MiMo)',
+    displayName: 'Xiaomi (MiMo CN)',
     baseUrl: 'https://api.xiaomi.com/v1',
     modelPrefixes: ['mimo-'],
     headerFormat: 'openai',
