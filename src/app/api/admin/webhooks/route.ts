@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin';
-import { getWebhookSettings, addWebhook, updateWebhook, deleteWebhook } from '@/lib/admin/admin-config';
+import { getWebhookSettings, saveWebhookSettings, addWebhook, updateWebhook, deleteWebhook } from '@/lib/admin/admin-config';
 
 export const runtime = 'nodejs';
 
@@ -184,6 +184,43 @@ export async function DELETE(request: NextRequest) {
       );
     }
     return Response.json({ success: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: { message, code: 500 } }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/admin/webhooks
+ * Update report settings (reportTime, reportTimezone).
+ * Body: { reportTime?: string, reportTimezone?: string }
+ */
+export async function PATCH(request: NextRequest) {
+  const authErr = requireAdminAuth(request);
+  if (authErr) return authErr;
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: { message: 'Invalid JSON body', code: 400 } },
+      { status: 400 }
+    );
+  }
+
+  const { reportTime, reportTimezone } = body;
+
+  try {
+    const settings = await getWebhookSettings();
+    if (reportTime && typeof reportTime === 'string') {
+      settings.reportTime = reportTime;
+    }
+    if (reportTimezone && typeof reportTimezone === 'string') {
+      settings.reportTimezone = reportTimezone;
+    }
+    await saveWebhookSettings(settings);
+    return Response.json({ success: true, settings });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return Response.json({ error: { message, code: 500 } }, { status: 500 });

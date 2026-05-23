@@ -5,6 +5,7 @@ import LogoIcon from './components/LogoIcon';
 import OverviewTab from './components/OverviewTab';
 import KeysTab from './components/KeysTab';
 import ToolsTab from './components/ToolsTab';
+import WebhooksTab from './components/WebhooksTab';
 
 interface ProviderInfo {
   name: string;
@@ -82,6 +83,7 @@ const TRANSLATIONS = {
     tabOverview: '📊 运行概览',
     tabKeys: '🔑 密钥管理',
     tabTools: '🛡️ 辅助工具',
+    tabWebhooks: '🔔 通知设置',
 
     // Quota Status
     quotaStatus: '📊 限额状态',
@@ -269,6 +271,7 @@ const TRANSLATIONS = {
     tabOverview: '📊 Overview',
     tabKeys: '🔑 Keys',
     tabTools: '🛡️ Tools',
+    tabWebhooks: '🔔 Webhooks',
 
     // Quota Status
     quotaStatus: '📊 Quota Status',
@@ -446,7 +449,7 @@ export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<'zh' | 'en'>('zh');
-  const [activeTab, setActiveTab] = useState<'overview' | 'keys' | 'tools'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'keys' | 'tools' | 'webhooks'>('overview');
 
   // Configuration management states
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
@@ -1106,6 +1109,12 @@ export default function AdminPage() {
         >
           {t.tabTools}
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'webhooks' ? 'active' : ''}`}
+          onClick={() => setActiveTab('webhooks')}
+        >
+          {t.tabWebhooks}
+        </button>
       </div>
 
       {/* Page Body */}
@@ -1160,6 +1169,15 @@ export default function AdminPage() {
         )}
         {activeTab === 'tools' && (
           <ToolsTab
+            apiKey={apiKey}
+            lang={lang}
+            t={t}
+            providers={data?.providers || []}
+            onRefreshData={fetchData}
+          />
+        )}
+        {activeTab === 'webhooks' && (
+          <WebhooksTab
             apiKey={apiKey}
             lang={lang}
             t={t}
