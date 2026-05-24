@@ -15,7 +15,7 @@ export const TRANSLATIONS = {
     title: 'AI Relay 后台管理',
     refresh: '刷新',
     refreshing: '正在刷新...',
-    autoRefreshInfo: '每15秒自动刷新 · 数据截至',
+    autoRefreshInfo: '页面激活时每15秒自动刷新 · 数据截至',
     navHome: '首页',
 
     // Tab names
@@ -206,7 +206,7 @@ export const TRANSLATIONS = {
     title: 'AI Relay Admin',
     refresh: 'Refresh',
     refreshing: 'Refreshing...',
-    autoRefreshInfo: 'Auto-refreshes every 15s · Data as of',
+    autoRefreshInfo: 'Auto-refreshes every 15s while active · Data as of',
     navHome: 'Home',
 
     // Tab names

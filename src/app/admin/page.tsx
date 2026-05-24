@@ -93,11 +93,49 @@ export default function AdminPage() {
   }, [setData, setAuthenticated, setLoading]);
 
   useEffect(() => {
-    if (authenticated) {
-      const interval = setInterval(fetchData, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [authenticated, apiKey, fetchData]);
+    if (!authenticated) return;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let autoRefreshInFlight = false;
+
+    const autoRefresh = async () => {
+      if (autoRefreshInFlight) return;
+      autoRefreshInFlight = true;
+      try {
+        await fetchData();
+      } finally {
+        autoRefreshInFlight = false;
+      }
+    };
+
+    const stopAutoRefresh = () => {
+      if (!interval) return;
+      clearInterval(interval);
+      interval = null;
+    };
+
+    const startAutoRefresh = () => {
+      if (document.visibilityState !== 'visible' || interval) return;
+      interval = setInterval(autoRefresh, 15000);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        autoRefresh();
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    };
+
+    startAutoRefresh();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopAutoRefresh();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [authenticated, fetchData]);
 
   if (!authenticated) {
     return (
