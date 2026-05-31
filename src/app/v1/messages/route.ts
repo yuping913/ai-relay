@@ -180,13 +180,14 @@ function validateBody(body: Partial<AnthropicMessagesRequest>): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const usageStorage = await createUsageStorage();
-  batchRecorder.setStorage(usageStorage as any);
   const traceId = request.headers.get('x-request-id') || `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
   if (!(await validateAuth(request))) {
     return jsonError(401, 'Invalid API key. Provide a valid key in the Authorization or x-api-key header.', 'authentication_error');
   }
+
+  const usageStorage = await createUsageStorage();
+  batchRecorder.setStorage(usageStorage as any);
 
   let body: AnthropicMessagesRequest;
   try {

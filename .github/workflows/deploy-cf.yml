@@ -153,12 +153,44 @@ jobs:
           if [ -d ".open-next/assets" ]; then
             cp -r .open-next/assets/* .open-next/
           fi
+
+          # Materialize statically prerendered app routes so Pages can serve them
+          # without passing `/` and `/admin` through the worker.
+          CACHE_DIR="$(find .open-next/cache -mindepth 1 -maxdepth 1 -type d | head -1)"
+          if [ -z "$CACHE_DIR" ]; then
+            echo "❌ No OpenNext cache directory found"
+            exit 1
+          fi
+
+          CACHE_DIR="$CACHE_DIR" node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const cacheDir = process.env.CACHE_DIR;
+          const outputRoot = '.open-next';
+          const entries = [
+            ['index.cache', 'index.html'],
+            ['admin.cache', path.join('admin', 'index.html')],
+            ['_not-found.cache', '404.html'],
+          ];
+
+          for (const [source, target] of entries) {
+            const input = path.join(cacheDir, source);
+            if (!fs.existsSync(input)) continue;
+            const payload = JSON.parse(fs.readFileSync(input, 'utf8'));
+            if (!payload?.html) continue;
+            const output = path.join(outputRoot, target);
+            fs.mkdirSync(path.dirname(output), { recursive: true });
+            fs.writeFileSync(output, payload.html);
+          }
+NODE
+
           # Rename worker.js to _worker.js to enable Pages Functions
           if [ -f ".open-next/worker.js" ]; then
             mv .open-next/worker.js .open-next/_worker.js
           fi
-          # Create _routes.json to tell Cloudflare Pages to serve static files directly from CDN instead of passing them to the worker
-          echo '{"version":1,"include":["/*"],"exclude":["/_next/static/*","/favicon.ico","/*.png","/*.ico","/*.txt","/*.svg"]}' > .open-next/_routes.json
+          # Tell Cloudflare Pages to serve the prerendered pages directly from CDN.
+          echo '{"version":1,"include":["/*"],"exclude":["/","/admin","/_next/static/*","/favicon.ico","/*.png","/*.ico","/*.txt","/*.svg"]}' > .open-next/_routes.json
 
       - name: Apply D1 migrations
         env:
@@ -211,6 +243,7 @@ jobs:
           SYNC_ENABLE_REQUEST_LOGS: ${{ secrets.ENABLE_REQUEST_LOGS || vars.ENABLE_REQUEST_LOGS }}
           SYNC_REQUEST_LOGS_MAX_ENTRIES: ${{ secrets.REQUEST_LOGS_MAX_ENTRIES || vars.REQUEST_LOGS_MAX_ENTRIES }}
           SYNC_CORS_ORIGINS: ${{ secrets.CORS_ORIGINS || vars.CORS_ORIGINS }}
+          SYNC_DEPLOY_URL: ${{ secrets.DEPLOY_URL || vars.DEPLOY_URL }}
         run: |
           export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN}"
           export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID}"

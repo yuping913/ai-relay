@@ -8,6 +8,7 @@ import { withTimeout } from '@/lib/utils/timeout';
 import type { ProviderConfig } from '../providers/types';
 import type { PriorityRule } from './priority-rules-core';
 import { normalizePriorityRules } from './priority-rules-core';
+import { getCFEnvSync, isCloudflareSync } from '@/lib/cf-env';
 
 let _kv: any = null;
 
@@ -190,10 +191,9 @@ async function getKV() {
   const g = global as any;
 
   // Cloudflare Pages: use CF KV binding via CFKVAdapter
-  const { isCloudflare, getCFEnv } = await import('@/lib/cf-env');
-  if (await isCloudflare()) {
+  if (isCloudflareSync()) {
     try {
-      const cfEnv = await getCFEnv();
+      const cfEnv = getCFEnvSync();
       if (cfEnv?.KV) {
         const { CFKVAdapter } = await import('./cf-kv-adapter');
         return new CFKVAdapter(cfEnv.KV);
@@ -1501,8 +1501,7 @@ export async function importStatsData(payload: Record<string, any>): Promise<voi
 
   // On CF, also write usage data to D1 so the chart reads from the correct store
   try {
-    const { getCFEnv } = await import('@/lib/cf-env');
-    const cfEnv = await getCFEnv();
+    const cfEnv = getCFEnvSync();
     if (cfEnv?.DB) {
       const d1Stmts: any[] = [];
       const upsertSql = `INSERT INTO daily_usage (date, provider, requests, tokens, prompt_tokens, completion_tokens)
@@ -1540,4 +1539,3 @@ export async function importStatsData(payload: Record<string, any>): Promise<voi
     // Non-critical: D1 write failure should not fail the whole import
   }
 }
-

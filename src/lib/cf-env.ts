@@ -18,7 +18,25 @@ export interface CFEnv {
   DB: import('@cloudflare/workers-types').D1Database;
 }
 
+export function getCFEnvSync(): CFEnv | null {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+
+  try {
+    const { getCloudflareContext } = require('@opennextjs/cloudflare');
+    const context = getCloudflareContext();
+    if (context && context.env) {
+      return context.env as unknown as CFEnv;
+    }
+  } catch {}
+  return null;
+}
+
 export async function getCFEnv(): Promise<CFEnv | null> {
+  const syncEnv = getCFEnvSync();
+  if (syncEnv) return syncEnv;
+
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return null;
   }
@@ -31,6 +49,10 @@ export async function getCFEnv(): Promise<CFEnv | null> {
     }
   } catch {}
   return null;
+}
+
+export function isCloudflareSync(): boolean {
+  return getCFEnvSync() !== null;
 }
 
 export async function isCloudflare(): Promise<boolean> {

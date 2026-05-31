@@ -243,7 +243,6 @@ function wrapStreamWithUsageTracking(
  * Routes requests to the appropriate upstream provider based on model prefix.
  */
 export async function POST(request: NextRequest) {
-  const usageStorage = await createUsageStorage();
   const traceId = request.headers.get('x-request-id') || `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   let requestedModel: string | undefined;
 
@@ -260,6 +259,8 @@ export async function POST(request: NextRequest) {
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }
+
+  const usageStorage = await createUsageStorage();
 
   // 2. Parse request body
   let body;
