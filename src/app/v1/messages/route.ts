@@ -452,18 +452,48 @@ function wrapOpenAIStreamToAnthropic(
 }
 
 /**
- * Collect client-supplied Anthropic headers worth forwarding to an Anthropic
- * upstream. Claude CLI / Claude app gate features (prompt caching, interleaved
- * thinking, fine-grained tool streaming, …) behind `anthropic-beta`, and pin
- * the API version via `anthropic-version`. Forwarding them keeps those features
- * working on the native path; on the OpenAI-translation path they are ignored.
+ * Headers that should NOT be forwarded to upstream providers.
+ * These are either set by our relay, sensitive, or conflict with upstream requirements.
+ */
+const BLOCKED_PASSTHROUGH_HEADERS = new Set([
+  'authorization',
+  'x-api-key',
+  'api-key',
+  'host',
+  'content-length',
+  'connection',
+  'transfer-encoding',
+  'upgrade',
+  'proxy-authorization',
+  'te',
+  'trailer',
+]);
+
+/**
+ * Collect client-supplied headers worth forwarding to an Anthropic upstream.
+ * This includes:
+ * - Anthropic-specific headers (anthropic-beta, anthropic-version, anthropic-dangerous-direct-browser-access)
+ * - Client identification headers (x-app, x-claude-code-session-id, x-stainless-*)
+ * - Any other headers not in the blocked list
+ *
+ * Forwarding these keeps Claude CLI/App features working and helps upstream identify client context.
  */
 function collectAnthropicPassthroughHeaders(request: NextRequest): Record<string, string> {
   const out: Record<string, string> = {};
-  const beta = request.headers.get('anthropic-beta');
-  if (beta) out['anthropic-beta'] = beta;
-  const version = request.headers.get('anthropic-version');
-  if (version) out['anthropic-version'] = version;
+
+  // Iterate through all request headers
+  request.headers.forEach((value, key) => {
+    const lowerKey = key.toLowerCase();
+
+    // Skip blocked headers
+    if (BLOCKED_PASSTHROUGH_HEADERS.has(lowerKey)) {
+      return;
+    }
+
+    // Forward all other headers
+    out[key] = value;
+  });
+
   return out;
 }
 
